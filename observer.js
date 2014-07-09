@@ -90,11 +90,11 @@ var runTest = function () {
   return function () { r1(); r2(); r3(); };
 };
 
-var chan;
-
 var grabChannel = function () {
-  return mozilla.registerProxyFilter(function (channel, proxy) { 
+  var chan,
+      cancelFunction = mozilla.registerProxyFilter(function (channel, proxy) { 
     chan = channel.QueryInterface(Ci.nsIHttpChannel);
     console.log("http-on-opening-request", chan.URI.spec);
   });
+  return [chan, cancelFunction];
 };
