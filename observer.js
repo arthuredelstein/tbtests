@@ -48,7 +48,7 @@ mozilla.observe = function (observerTopic, callback) {
 // Returns a zero-argument function that will unregister the filter.
 mozilla.registerProxyFilter = function (filterFunction, positionIndex) {
   var proxyFilter = {
-    applyFilter : function (aProxyService, aChannel, aProxy) {
+    apply : function (aProxyService, aChannel, aProxy) {
       return filterFunction(aChannel, aProxy);
     }
   };
@@ -73,15 +73,16 @@ tor.getChannelSocksPort = function(httpChannel) {
 // Tests the observer functionality for http-on-modify-request. Returns a zero-arg
 // function that removes the observer.
 var runTest = function () {
-  var r1 = mozilla.observe("http-on-modify-request", function(subject, topic, data) { 
+  var r1 = mozilla.observe("http-on-modify-request", function (subject, topic, data) { 
     var httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
-    console.log(getChannelSocksPort(httpChannel));
+    console.log(tor.getChannelSocksPort(httpChannel));
     console.log("http-on-modify-request", httpChannel.URI.spec);
   });
-  var r2 = mozilla.observe("http-on-opening-request", function(subject, topic, data) { 
+  var r2 = mozilla.observe("http-on-opening-request", function (subject, topic, data) { 
     var httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
     console.log("http-on-opening-request", httpChannel.URI.spec);
-    utils.logMembers(httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo);
+    console.log(httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo);
+    //utils.logMembers(httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo);
   });
   var r3 = mozilla.registerProxyFilter(function (aChannel, aProxy) {
     console.log("proxy filter", aChannel.QueryInterface(Ci.nsIHttpChannel).URI.spec);
@@ -93,8 +94,8 @@ var runTest = function () {
 var grabChannel = function () {
   var chan,
       cancelFunction = mozilla.registerProxyFilter(function (channel, proxy) { 
-    chan = channel.QueryInterface(Ci.nsIHttpChannel);
-    console.log("http-on-opening-request", chan.URI.spec);
+    //chan = channel.QueryInterface(Ci.nsIHttpChannel);
+    console.log(channel, proxy);
   });
   return [function () {return chan;}, cancelFunction];
 };
