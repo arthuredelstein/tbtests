@@ -63,11 +63,11 @@ var tor = tor || {};
 tor.setChannelSocksPort = function(httpChannel, port) {
   var pi = mozilla.protocolProxyService.newProxyInfo("socks", "127.0.0.1", port, 1, 1800, null);
   httpChannel.QueryInterface(Ci.nsIProtocolProxyCallback).onProxyAvailable(null, null, pi, 0);
-}
+};
 
 tor.getChannelSocksPort = function(httpChannel) {
   return httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo.port;
-}
+};
 
 // __runTest__.
 // Tests the observer functionality for http-on-modify-request. Returns a zero-arg
@@ -75,7 +75,7 @@ tor.getChannelSocksPort = function(httpChannel) {
 var runTest = function () {
   var r1 = mozilla.observe("http-on-modify-request", function(subject, topic, data) { 
     var httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
-    console.log(getChannelSocksPort(httpChannel);
+    console.log(getChannelSocksPort(httpChannel));
     console.log("http-on-modify-request", httpChannel.URI.spec);
   });
   var r2 = mozilla.observe("http-on-opening-request", function(subject, topic, data) { 
