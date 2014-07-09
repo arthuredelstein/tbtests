@@ -96,5 +96,5 @@ var grabChannel = function () {
     chan = channel.QueryInterface(Ci.nsIHttpChannel);
     console.log("http-on-opening-request", chan.URI.spec);
   });
-  return [chan, cancelFunction];
+  return [function () {return chan;}, cancelFunction];
 };
