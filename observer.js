@@ -49,7 +49,7 @@ mozilla.observe = function (observerTopic, callback) {
 mozilla.registerProxyFilter = function (filterFunction, positionIndex) {
   var proxyFilter = {
     applyFilter : function (aProxyService, aChannel, aProxy) {
-      return filterFunction(aURI, aProxy);
+      return filterFunction(aChannel, aProxy);
     }
   };
   mozilla.protocolProxyService.registerFilter(proxyFilter, positionIndex);
