@@ -15,11 +15,13 @@ utils.logMembers = function (obj) {
 // Useful functionality for interacting with Mozilla services.
 var mozilla = mozilla || {};
 
-// Mozilla's services
+// Mozilla services
 mozilla.observerService = Cc["@mozilla.org/observer-service;1"]
                             .getService(Ci.nsIObserverService);
 mozilla.protocolProxyService = Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                  .getService(Ci.nsIProtocolProxyService);
+mozilla.thirdPartyUtil = Cc["@mozilla.org/thirdpartyutil;1"]
+                           .getService(Ci.mozIThirdPartyUtil);
                           
 // __mozilla.observe__.
 // Registers a callback with the Mozilla Observer Service,
@@ -58,25 +60,59 @@ mozilla.registerProxyFilter = function (filterFunction, positionIndex) {
   };
 };
 
+// ## tor functionality.
 var tor = tor || {};
 
-tor.setChannelSocksPort = function(httpChannel, port) {
+tor.setChannelSocksPort = function (httpChannel, port) {
   var pi = mozilla.protocolProxyService.newProxyInfo("socks", "127.0.0.1", port, 1, 1800, null);
   httpChannel.QueryInterface(Ci.nsIProtocolProxyCallback).onProxyAvailable(null, null, pi, 0);
 };
 
-tor.getChannelSocksPort = function(httpChannel) {
+tor.getChannelSocksPort = function (httpChannel) {
   return httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo.port;
 };
 
-// __runTest__.
-// Tests the observer functionality for http-on-modify-request. Returns a zero-arg
-// function that removes the observer.
-var runTest = function () {
+// __tor.socksProxyInfoWithUsername__.
+// Takes a proxyInfo object (originalProxy) and returns a new proxyInfo
+// object with the same properties, except the username is set to the 
+// second argument of this function.
+tor.socksProxyInfoWithUsername = function (originalProxy, username) {
+  var proxy = originalProxy.QueryInterface(Ci.nsIProxyInfo);
+  return mozilla.protocolProxyService.newSOCKSProxyInfo(proxy.host, proxy.port,
+                                                        username, "",
+                                                        proxy.flags,
+                                                        proxy.failoverTimeout,
+                                                        proxy.failoverProxy);
+};
+
+// ## test functions.
+
+var test = test || {};
+
+// __test.proxy__.
+// Tests the proxy filter functionality. Returns a function that de-registers the 
+// proxy filter.
+test.proxy = function () {
+  return mozilla.registerProxyFilter(function (aChannel, aProxy) {
+    var channel = aChannel.QueryInterface(Ci.nsIHttpChannel),
+        firstPartyURI = mozilla.thirdPartyUtil.getFirstPartyURIFromChannel(channel, true).QueryInterface(Ci.nsIURI),
+        firstPartyDomain = mozilla.thirdPartyUtil.getFirstPartyHostForIsolation(firstPartyURI),
+        proxy = aProxy.QueryInterface(Ci.nsIProxyInfo),
+        replacementProxy = tor.socksProxyInfoWithUsername(aProxy, firstPartyDomain);
+    console.log("proxy filter", channel.URI.spec, firstPartyURI.spec, firstPartyDomain);
+    console.log(replacementProxy.host, replacementProxy.port, replacementProxy.username, replacementProxy.password); 
+    return replacementProxy;
+  }, 0);
+};
+
+// __test.all__.
+// Tests all callbacks. Returns a zero-arg function that de-registers the callbacks.
+test.all = function () {
   var r1 = mozilla.observe("http-on-modify-request", function (subject, topic, data) { 
     var httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
-    console.log(tor.getChannelSocksPort(httpChannel));
-    console.log("http-on-modify-request", httpChannel.URI.spec);
+    var proxyInfo = subject.QueryInterface(Ci.nsIProxiedChannel).proxyInfo;
+    //console.log(tor.getChannelSocksPort(httpChannel));
+    console.log("http-on-modify-request", httpChannel.URI.spec, proxyInfo.host, proxyInfo.port, proxyInfo.username, proxyInfo.password);
   });
   var r2 = mozilla.observe("http-on-opening-request", function (subject, topic, data) { 
     var httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);
@@ -84,18 +120,7 @@ var runTest = function () {
     console.log(httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo);
     //utils.logMembers(httpChannel.QueryInterface(Ci.nsIProxiedChannel).proxyInfo);
   });
-  var r3 = mozilla.registerProxyFilter(function (aChannel, aProxy) {
-    console.log("proxy filter", aChannel.QueryInterface(Ci.nsIHttpChannel).URI.spec);
-    return aProxy;
-  }, 0);
+  var r3 = test.proxy();
   return function () { r1(); r2(); r3(); };
 };
 
-var grabChannel = function () {
-  var chan,
-      cancelFunction = mozilla.registerProxyFilter(function (channel, proxy) { 
-    //chan = channel.QueryInterface(Ci.nsIHttpChannel);
-    console.log(channel, proxy);
-  });
-  return [function () {return chan;}, cancelFunction];
-};
