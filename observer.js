@@ -68,14 +68,17 @@ tor.socksProxyCredentials = function (originalProxy, domain) {
 // to the SOCKS server (the tor client process) with a username (the first party domain)
 // and a nonce password. Tor provides a separate circuit for each username+password
 // combination.
-tor.proxy = function () {
+tor.isolateCircuitsByDomain = function () {
   return mozilla.registerProxyFilter(function (aChannel, aProxy) {
     var channel = aChannel.QueryInterface(Ci.nsIHttpChannel),
-        firstPartyURI = mozilla.thirdPartyUtil.getFirstPartyURIFromChannel(channel, true).QueryInterface(Ci.nsIURI),
-        firstPartyDomain = mozilla.thirdPartyUtil.getFirstPartyHostForIsolation(firstPartyURI),
+        firstPartyURI = mozilla.thirdPartyUtil.getFirstPartyURIFromChannel(channel, true)
+                          .QueryInterface(Ci.nsIURI),
+        firstPartyDomain = mozilla.thirdPartyUtil
+                             .getFirstPartyHostForIsolation(firstPartyURI),
         proxy = aProxy.QueryInterface(Ci.nsIProxyInfo),
         replacementProxy = tor.socksProxyCredentials(aProxy, firstPartyDomain);
-    console.log("tor:", channel.URI.spec, replacementProxy.host, replacementProxy.port, replacementProxy.username, replacementProxy.password); 
+    //console.log("tor", channel.URI.spec, replacementProxy.host, replacementProxy.port,
+    //            replacementProxy.username, replacementProxy.password); 
     return replacementProxy;
   }, 0);
 };
