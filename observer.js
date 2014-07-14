@@ -56,8 +56,8 @@ tor.socksProxyCredentials = function (originalProxy, domain) {
   return mozilla.protocolProxyService
            .newSOCKSProxyInfo(proxy.host,
             		          proxy.port,
-            		          username,
-            		          tor.noncesForDomains[domain].toString(),
+            		          domain, // username
+            		          tor.noncesForDomains[domain].toString(), // password
             		          proxy.flags,
             		          proxy.failoverTimeout,
             		          proxy.failoverProxy);
@@ -66,7 +66,8 @@ tor.socksProxyCredentials = function (originalProxy, domain) {
 // __tor.isolateCircuitsByDomain__.
 // For every HTTPChannel, replaces the default SOCKS proxy with one that authenticates
 // to the SOCKS server (the tor client process) with a username (the first party domain)
-// and a nonce password.
+// and a nonce password. Tor provides a separate circuit for each username+password
+// combination.
 tor.proxy = function () {
   return mozilla.registerProxyFilter(function (aChannel, aProxy) {
     var channel = aChannel.QueryInterface(Ci.nsIHttpChannel),
