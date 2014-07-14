@@ -11,7 +11,11 @@ var mozilla = mozilla || {};
 // by the browser.
 mozilla.protocolProxyService = Cc["@mozilla.org/network/protocol-proxy-service;1"]
                                  .getService(Ci.nsIProtocolProxyService);
-
+// __mozilla.thirdPartyUtil__.
+// Mozilla's Thirdy Party Utilities, for figuring out first party domain.
+mozilla.thirdPartyUtil = Cc["@mozilla.org/thirdpartyutil;1"]
+                           .getService(Ci.mozIThirdPartyUtil);
+                           
 // __mozilla.registerProxyFilter__.
 // Registers a proxy filter with the Mozilla Protocol Proxy Service,
 // which will help to decide the proxy to be used for a given URI.
