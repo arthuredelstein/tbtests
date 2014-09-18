@@ -1,3 +1,10 @@
+// # isolateDomains.js
+// A script for TorBrowser that puts requests from different
+// first party domains on separate tor circuits.
+// This file is written in call stack order (later functions
+// call earlier functions). The code file can be processed
+// with docco.js to provide clear documentation.
+
 // ## Abbreviations
 Cc = Components.classes;
 Ci = Components.interfaces;
@@ -77,9 +84,11 @@ tor.isolateCircuitsByDomain = function () {
                              .getFirstPartyHostForIsolation(firstPartyURI),
         proxy = aProxy.QueryInterface(Ci.nsIProxyInfo),
         replacementProxy = tor.socksProxyCredentials(aProxy, firstPartyDomain);
-    //console.log("tor", channel.URI.spec, replacementProxy.host, replacementProxy.port,
-    //            replacementProxy.username, replacementProxy.password); 
+    console.log("tor", channel.URI.spec, replacementProxy.host, replacementProxy.port,
+                replacementProxy.username, replacementProxy.password); 
     return replacementProxy;
   }, 0);
 };
 
+// ## Run the isolation code.
+tor.isolateCircuitsByDomain();
