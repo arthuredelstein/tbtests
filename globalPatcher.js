@@ -1,3 +1,4 @@
+/* jshint esnext:true */
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -16,7 +17,7 @@ let addObserverFunction = function(observerFunction, notification) {
   observerService.addObserver(observer, notification, false);
   return function () {
     observerService.removeObserver(observer, notification);
-  }
+  };
 };
 
 let applyToContentGlobals = function (modificationFunction) {
@@ -48,7 +49,7 @@ let fixNumber = function (w) {
     // We can't use old w.Number.prototype because Firefox complains
     // we can't access unwrapped object. So we use the chrome version.
     return Number.prototype.toLocaleString.apply(this, args);
-  }
+  };
 };
 
 // Modify the behavior of Strings in the given window with global
@@ -60,7 +61,7 @@ let fixString = function (w) {
     // We can't use old w.Number.prototype because Firefox complains
     // we can't access unwrapped object. So we use the chrome version.
     return String.prototype.localeCompare.apply(this, [compareString, myLocales, options]);
-  }
+  };
 };
 
 // Others needed: Intl.Collator, Intl.DateTimeFormat, Intl.NumberFormat, Array.toLocaleString
