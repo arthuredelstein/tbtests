@@ -4,7 +4,7 @@ var show = function (value) {
 
 var stored = window.localStorage.getItem("test");
 if (!stored) {
-  var newValue = new Date().toString();
+  var newValue = window.document.URL + ":" + (new Date().toString());
   window.localStorage.setItem("test", newValue);
   show("Set value to: " + newValue);
 } else {
